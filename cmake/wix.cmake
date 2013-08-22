@@ -136,37 +136,47 @@ if (WIN32)
     #  _sources - name of list with DLLs
     #  _obj - name of list for target objects
     #
-    MACRO(WIX_HEAT _sources _objs)
-        DBG_MSG("WiX heat: ${${_sources}}")
-        FOREACH (_current_DLL ${${_sources}})
-            GET_FILENAME_COMPONENT(_tmp_FILE ${_current_DLL} ABSOLUTE)
-            GET_FILENAME_COMPONENT(_basename ${_tmp_FILE} NAME_WE)
+    MESSAGE("Checking for Win64 build")
+    MESSAGE("${Wix_WIN64}")
 
-            SET (SOURCE_WIX_FILE ${_tmp_FILE} )
+    IF(Wix_WIN64)
+        MESSAGE("Win64 build detected - using wxs template in plugin project, you must provide custom WiX for Win64 build.   Heat is disabled.")
+        MACRO(WIX_HEAT _sources _objs)
 
-            if (NOT WIX_HEAT_SUFFIX)
-                set(WIX_HEAT_SUFFIX "_auto")
-            endif()
+        ENDMACRO(WIX_HEAT)
+    ELSE()
+        MACRO(WIX_HEAT _sources _objs)
+            
+            DBG_MSG("WiX heat: ${${_sources}}")
+            FOREACH (_current_DLL ${${_sources}})
+                GET_FILENAME_COMPONENT(_tmp_FILE ${_current_DLL} ABSOLUTE)
+                GET_FILENAME_COMPONENT(_basename ${_tmp_FILE} NAME_WE)
 
-            SET (OUTPUT_WIXOBJ ${_basename}${WIX_HEAT_SUFFIX}.wxs )
+                SET (SOURCE_WIX_FILE ${_tmp_FILE} )
 
-            DBG_MSG("WIX output: ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_WIXOBJ}")
-            DBG_MSG("WIX command: ${WIX_HEAT}")
+                if (NOT WIX_HEAT_SUFFIX)
+                    set(WIX_HEAT_SUFFIX "_auto")
+                endif()
 
-            ADD_CUSTOM_COMMAND( 
-                OUTPUT    ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_WIXOBJ}
-                COMMAND   ${WIX_HEAT}
-                ARGS      file ${SOURCE_WIX_FILE}
-                          -out ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_WIXOBJ}
-                          ${WIX_HEAT_FLAGS}
-                DEPENDS   ${SOURCE_WIX_FILE}
-                COMMENT   "Compiling ${SOURCE_WIX_FILE} -> ${OUTPUT_WIXOBJ}"
-                )
-            SET(${_objs} ${${_objs}} ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_WIXOBJ} )
-        ENDFOREACH(_current_DLL)
-        DBG_MSG("WIX compile output: ${${_objs}}")
-    ENDMACRO(WIX_HEAT)
+                SET (OUTPUT_WIXOBJ ${_basename}${WIX_HEAT_SUFFIX}.wxs )
 
+                DBG_MSG("WIX output: ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_WIXOBJ}")
+                DBG_MSG("WIX command: ${WIX_HEAT}")
+
+                ADD_CUSTOM_COMMAND( 
+                    OUTPUT    ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_WIXOBJ}
+                    COMMAND   ${WIX_HEAT}
+                    ARGS      file ${SOURCE_WIX_FILE}
+                              -out ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_WIXOBJ}
+                              ${WIX_HEAT_FLAGS}
+                    DEPENDS   ${SOURCE_WIX_FILE}
+                    COMMENT   "Compiling ${SOURCE_WIX_FILE} -> ${OUTPUT_WIXOBJ}"
+                    )
+                SET(${_objs} ${${_objs}} ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_WIXOBJ} )
+            ENDFOREACH(_current_DLL)
+            DBG_MSG("WIX compile output: ${${_objs}}")
+        ENDMACRO(WIX_HEAT)
+    ENDIF()
     #
     # Call wix compiler
     #
